@@ -1,0 +1,40 @@
+const sampleMenu = [
+  {
+    name: "Spicy Chicken Kottu",
+    description: "Chopped roti tossed with chicken, vegetables, egg, and house spices.",
+    category: "Kottu",
+    price: 1450,
+    image: "/images/menu/chicken-kottu.jpg",
+    tags: ["popular", "chicken", "dinner"],
+    spiceLevel: "hot",
+    prepTime: 18,
+    rating: 4.8,
+    featured: true,
+  },
+  {
+    name: "Vegetable Fried Rice",
+    description: "Wok-fried basmati rice with vegetables and a light soy garlic finish.",
+    category: "Rice",
+    price: 980,
+    image: "/images/menu/vegetable-fried-rice.jpg",
+    tags: ["vegetarian", "rice", "quick"],
+    spiceLevel: "mild",
+    prepTime: 12,
+    rating: 4.5,
+    featured: false,
+  },
+  {
+    name: "Mango Lassi",
+    description: "Chilled mango yogurt drink with a smooth, creamy finish.",
+    category: "Beverages",
+    price: 520,
+    image: "/images/menu/mango-lassi.jpg",
+    tags: ["drink", "mango", "cooling"],
+    spiceLevel: "none",
+    prepTime: 5,
+    rating: 4.7,
+    featured: true,
+  },
+];
+
+module.exports = sampleMenu;
