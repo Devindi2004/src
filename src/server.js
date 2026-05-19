@@ -20,6 +20,16 @@ const startServer = async () => {
 
   initSocket(io);
 
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${env.port} is already in use. Stop the existing process or set PORT.`);
+      process.exit(1);
+    }
+
+    console.error("HTTP server error:", error);
+    process.exit(1);
+  });
+
   server.listen(env.port, () => {
     console.log("========================================");
     console.log("DineFlow API started");

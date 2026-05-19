@@ -1,9 +1,16 @@
-const successResponse = (res, { statusCode = 200, message = "Success", data = {}, meta = null }) => {
+const successResponse = (
+  res,
+  { statusCode = 200, message = "Success", data = {}, meta = null, exposeTopLevel = true }
+) => {
   const payload = {
     success: true,
     message,
-    ...data,
+    data,
   };
+
+  if (exposeTopLevel && data && typeof data === "object" && !Array.isArray(data)) {
+    Object.assign(payload, data);
+  }
 
   if (meta) payload.meta = meta;
 

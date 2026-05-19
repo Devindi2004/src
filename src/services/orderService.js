@@ -3,7 +3,8 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { calculateOrderTotals } = require("../utils/orderUtils");
-const { sendSocketEvent } = require("../utils/socketEmitter");
+const { decrementInventoryForMenuItems } = require("./inventoryService");
+const { emitToRooms } = require("../utils/socketEmitter");
 
 const ORDER_STATUSES = ["new", "preparing", "ready", "completed", "cancelled"];
 
@@ -66,17 +67,20 @@ const createOrderFromPayload = async (payload, user) => {
     });
   }
 
-  emitOrderEvents(order, "order:new");
+  await decrementInventoryForMenuItems(items);
+
+  emitOrderEvents(order, ["new-order", "order:new"]);
   return order;
 };
 
-const emitOrderEvents = (order, primaryEvent = "order:update") => {
+const emitOrderEvents = (order, primaryEvents = ["order-updated", "order:update"]) => {
   const payload = { order };
-  sendSocketEvent(primaryEvent, payload, "kitchen");
-  sendSocketEvent(primaryEvent, payload, "admin");
-  sendSocketEvent("kitchen:update", payload, "kitchen");
-  sendSocketEvent("order:update", payload, `order:${order._id}`);
-  if (order.customer) sendSocketEvent("order:update", payload, `customer:${order.customer}`);
+  emitToRooms(primaryEvents, payload, ["kitchen", "admin"]);
+  emitToRooms(["kitchen-update", "kitchen:update"], payload, ["kitchen"]);
+  emitToRooms(["order-updated", "order:update"], payload, [`order:${order._id}`]);
+  if (order.customer) {
+    emitToRooms(["order-updated", "order:update"], payload, [`customer:${order.customer}`]);
+  }
 };
 
 const updateOrderStatusById = async (orderId, status, user) => {
@@ -91,7 +95,7 @@ const updateOrderStatusById = async (orderId, status, user) => {
   order.statusHistory.push({ status, changedBy: user?._id || null });
   await order.save();
 
-  emitOrderEvents(order, "order:update");
+  emitOrderEvents(order, ["order-updated", "order:update"]);
   return order;
 };
 

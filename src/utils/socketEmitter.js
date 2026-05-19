@@ -13,4 +13,15 @@ const sendSocketEvent = (event, payload, room = null) => {
   return true;
 };
 
-module.exports = { sendSocketEvent };
+const emitToRooms = (events, payload, rooms = []) => {
+  events.forEach((event) => {
+    if (rooms.length === 0) {
+      sendSocketEvent(event, payload);
+      return;
+    }
+
+    rooms.forEach((room) => sendSocketEvent(event, payload, room));
+  });
+};
+
+module.exports = { emitToRooms, sendSocketEvent };

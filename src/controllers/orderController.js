@@ -24,6 +24,9 @@ const getOrders = asyncHandler(async (req, res) => {
   if (tableNumber) filter.tableNumber = tableNumber;
   if (mine === "true" && req.user?.role === "customer") filter.customer = req.user._id;
   if (req.user?.role === "customer" && mine !== "false") filter.customer = req.user._id;
+  if (req.user?.role === "customer" && mine === "false") {
+    throw new AppError("Customers can only view their own orders.", 403);
+  }
 
   const orders = await Order.find(filter)
     .populate("customer", "name email phone")
@@ -37,8 +40,15 @@ const getOrders = asyncHandler(async (req, res) => {
 });
 
 const getMyOrders = asyncHandler(async (req, res) => {
-  req.query.mine = "true";
-  return getOrders(req, res);
+  const orders = await Order.find({ customer: req.user._id })
+    .populate("customer", "name email phone")
+    .populate("items.menuItem", "image category")
+    .sort({ createdAt: -1 });
+
+  successResponse(res, {
+    message: "My orders fetched.",
+    data: { count: orders.length, orders },
+  });
 });
 
 const getOrderById = asyncHandler(async (req, res) => {

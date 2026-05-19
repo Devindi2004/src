@@ -1,9 +1,25 @@
 const InventoryItem = require("../models/InventoryItem");
 const Order = require("../models/Order");
 
-const getAnalyticsOverview = async () => {
+const getRangeStartDate = (range = "7d") => {
+  const daysByRange = {
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
+  };
+  const days = daysByRange[range] || 7;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+};
+
+const getAnalyticsOverview = async (range = "7d") => {
+  const startDate = getRangeStartDate(range);
+  const match = {
+    status: { $ne: "cancelled" },
+    createdAt: { $gte: startDate },
+  };
+
   const [summary] = await Order.aggregate([
-    { $match: { status: { $ne: "cancelled" } } },
+    { $match: match },
     {
       $group: {
         _id: null,
@@ -15,6 +31,7 @@ const getAnalyticsOverview = async () => {
   ]);
 
   const topSellingFoods = await Order.aggregate([
+    { $match: match },
     { $unwind: "$items" },
     {
       $group: {
@@ -29,7 +46,7 @@ const getAnalyticsOverview = async () => {
   ]);
 
   const chartData = await Order.aggregate([
-    { $match: { status: { $ne: "cancelled" } } },
+    { $match: match },
     {
       $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -42,7 +59,10 @@ const getAnalyticsOverview = async () => {
   ]);
 
   const [recentOrders, lowStockAlerts] = await Promise.all([
-    Order.find().populate("customer", "name email").sort({ createdAt: -1 }).limit(10),
+    Order.find({ createdAt: { $gte: startDate } })
+      .populate("customer", "name email")
+      .sort({ createdAt: -1 })
+      .limit(10),
     InventoryItem.find({ $expr: { $lte: ["$stock", "$threshold"] } }).sort({ stock: 1 }).limit(10),
   ]);
 
@@ -53,6 +73,7 @@ const getAnalyticsOverview = async () => {
     topSellingFoods,
     recentOrders,
     lowStockAlerts,
+    range,
     chartData: chartData.map((point) => ({
       date: point._id,
       revenue: Number(point.revenue.toFixed(2)),
@@ -61,4 +82,4 @@ const getAnalyticsOverview = async () => {
   };
 };
 
-module.exports = { getAnalyticsOverview };
+module.exports = { getAnalyticsOverview, getRangeStartDate };

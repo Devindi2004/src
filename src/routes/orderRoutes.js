@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   createOrder,
+  getMyOrders,
   getOrderById,
   getOrders,
   updateOrderStatus,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.post("/", optionalAuth, createOrder);
 router.get("/", protect, getOrders);
+router.get("/my", protect, getMyOrders);
 router.get("/:id", protect, getOrderById);
 router.patch("/:id/status", protect, authorize("admin", "kitchen"), updateOrderStatus);
 

@@ -4,12 +4,13 @@ const {
   getReservations,
   updateReservation,
 } = require("../controllers/reservationController");
-const { authorize, protect } = require("../middleware/auth");
+const { protect } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-router.post("/", protect, authorize("customer", "waiter", "admin"), createReservation);
-router.get("/", protect, authorize("admin", "waiter"), getReservations);
-router.patch("/:id", protect, authorize("admin", "waiter"), updateReservation);
+router.post("/", protect, authorize("customer", "admin"), createReservation);
+router.get("/", protect, authorize("customer", "admin", "kitchen"), getReservations);
+router.patch("/:id", protect, authorize("customer", "admin", "kitchen"), updateReservation);
 
 module.exports = router;

@@ -1,15 +1,23 @@
 const Table = require("../models/Table");
 const AppError = require("../utils/AppError");
 const asyncHandler = require("../utils/asyncHandler");
+const { successResponse } = require("../utils/apiResponse");
 
 const getTables = asyncHandler(async (_req, res) => {
   const tables = await Table.find().sort({ tableNumber: 1 });
-  res.json({ success: true, count: tables.length, tables });
+  successResponse(res, {
+    message: "Tables fetched.",
+    data: { count: tables.length, tables },
+  });
 });
 
 const createTable = asyncHandler(async (req, res) => {
   const table = await Table.create(req.body);
-  res.status(201).json({ success: true, table });
+  successResponse(res, {
+    statusCode: 201,
+    message: "Table created.",
+    data: { table },
+  });
 });
 
 const updateTable = asyncHandler(async (req, res) => {
@@ -20,7 +28,10 @@ const updateTable = asyncHandler(async (req, res) => {
 
   if (!table) throw new AppError("Table not found.", 404);
 
-  res.json({ success: true, table });
+  successResponse(res, {
+    message: "Table updated.",
+    data: { table },
+  });
 });
 
-module.exports = { getTables, createTable, updateTable };
+module.exports = { createTable, getTables, updateTable };
